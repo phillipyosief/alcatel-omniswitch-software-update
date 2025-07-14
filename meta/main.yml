@@ -1,6 +1,6 @@
 galaxy_info:
   author: Phillip Jerome Yosief
-  description: Automated software update management for Alcatel-Lucent OmniSwitch devices (AOS6/AOS8). This role provides comprehensive firmware, FPGA, and U-Boot update capabilities with compliance checking, inventory management, and configuration validation for network switches.
+  description: Automated software update management for Alcatel-Lucent OmniSwitch devices (AOS6/AOS8) with firmware, FPGA, and U-Boot update capabilities.
   company: Stadt-Frankfurt
 
   # If the issue tracker for your role is not on github, uncomment the
