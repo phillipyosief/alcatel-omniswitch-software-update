@@ -1,0 +1,13 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Updating U-Boot (CMM)
+  alcatel.aos8.aos8_command:
+    commands:
+      - "update uboot cmm all file {{ uboot_file_name }}"
+  when: release == '8'
+
+- name: Updating U-Boot
+  alcatel.aos8.aos8_command:
+    commands:
+      - "update uboot cmm all"
+  when: release == '6'

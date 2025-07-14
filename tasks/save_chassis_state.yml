@@ -1,0 +1,21 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Register raw show module status output
+  alcatel.aos8.aos8_command:
+    commands:
+      - show stack topology
+  register: raw_show_virtual_chassis_topology_output
+  when: release == '6'
+
+- name: Register raw show module status output
+  alcatel.aos8.aos8_command:
+    commands:
+      - show virtual-chassis topology
+  register: raw_show_virtual_chassis_topology_output
+  when: release == '8'
+
+- name: Save output to local file
+  copy:
+    content: "{{ raw_show_virtual_chassis_topology_output.stdout_lines | to_nice_yaml }}"
+    dest: "{{ backup_chassis_state_folder }}/{{ inventory_hostname }}"
+  delegate_to: localhost

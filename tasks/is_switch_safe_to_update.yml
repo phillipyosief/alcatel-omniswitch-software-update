@@ -1,0 +1,27 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Collect show running-directory output
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show running-directory"
+  register: raw_show_running_directory_output
+
+- name: Parse show running-directory output
+  set_fact:
+    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm') }}"
+
+- name: Collect show virtual-chassis topology
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show virtual-chassis topology"
+  register: raw_show_virtual_chassis_topology_output
+
+- name: Check Running Configuration status and set is_switch_safe_to_update variable
+  set_fact:
+    is_switch_safe_to_update: "{{ 
+      (parsed_show_running_directory_output[0].running_directory == 'WORKING') and
+      (parsed_show_running_directory_output[0].running_configuration_status == 'SYNCHRONIZED') and
+      ('SYNCHRONIZED' in parsed_show_running_directory_output[0].flash_between_cmms) and
+      ('Not-Joined' not in raw_show_virtual_chassis_topology_output.stdout[0]) and
+      ('Unassigned' not in raw_show_virtual_chassis_topology_output.stdout[0]) 
+      }}"

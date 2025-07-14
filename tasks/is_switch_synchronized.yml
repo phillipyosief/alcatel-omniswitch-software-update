@@ -1,0 +1,22 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Collect show running directory output
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show running-directory"
+  register: raw_show_running_directory_output
+
+- name: Parse show running-directory output
+  set_fact:
+    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm') }}"
+
+- name: Check Running Configuration status and set is_synchronized variable
+  set_fact:
+    is_synchronized: >-
+      {% if parsed_show_running_directory_output[0]['running_configuration_status'] == 'SYNCHRONIZED' %}
+      true
+      {% elif parsed_show_running_directory_output[0]['running_configuration_status'] == 'NOT SYNCHRONIZED' %}
+      false
+      {% else %}
+      unknown
+      {% endif %}

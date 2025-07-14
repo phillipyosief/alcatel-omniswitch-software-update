@@ -1,0 +1,42 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Wait until device is reachable via ping
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    state: started
+    delay: "{{ ping_check_interval }}"
+    timeout: "{{ ping_timeout }}"
+  delegate_to: localhost
+
+- name: Collect show module status output
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show module status"
+  register: raw_show_module_status_output
+
+- name: Parse show module status output
+  set_fact:
+    parsed_show_module_status_output: "{{ raw_show_module_status_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_module_status.textfsm') }}"
+
+- name: Verify if all Chassis/Slots are UP
+  set_fact:
+    is_switch_ready: >-
+      {{
+        parsed_show_module_status_output
+        | selectattr('STATUS', 'equalto', 'UP')
+        | list
+        | length == parsed_show_module_status_output | length
+      }}
+
+- name: Wait until all Chassis/Slots are UP using until loop
+  until: is_switch_ready
+  retries: "{{ operational_status_timeout // operational_status_check_interval }}"
+  delay: "{{ operational_status_check_interval }}"
+  delegate_to: localhost
+  local_action:
+    module: command
+    cmd: "echo 'Waiting for all slots to be UP'"
+
+- name: Continue with the Playbook
+  debug:
+    msg: "All Chassis/Slots are UP. Proceeding with the rest of the playbook."

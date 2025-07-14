@@ -1,0 +1,15 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Check model name
+  alcatel.aos8.aos8_command:
+    commands:
+      - show chassis
+  register: raw_chassis_output
+  
+- name: Parse model name
+  set_fact:
+    model_name: "{{ (raw_chassis_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_chassis.textfsm')).0 }}"
+    
+- name: Split and format model name
+  set_fact:
+    model_name: "{{ model_name['model_name'].split('-')[0] }}"

@@ -1,0 +1,10 @@
+---
+# defaults file for alcatel-omniswitch-software-update
+
+omniswitch_username: "admin"
+omniswitch_password: "switch"
+
+textfsm_folder: "{{ role_path }}/textfsm/"
+
+rollback_timeout: 15
+directory: working

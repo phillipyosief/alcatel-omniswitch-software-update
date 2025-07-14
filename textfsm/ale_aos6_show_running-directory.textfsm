@@ -1,0 +1,18 @@
+Value Running_CMM (\w+)
+Value CMM_Mode (\w+ \w+)
+Value Current_CMM_Slot (\d+)
+Value Running_Configuration (\w+)
+Value Certify_Restore_Status (\w+)
+Value Flash_Between_CMMs (\w+)
+Value Running_Configuration_Status (\w+)
+Value Stacks_Reload (\w+ \w+ \w+)
+
+Start
+  ^\s*Running CMM\s*:\s*${Running_CMM} -> Continue
+  ^\s*CMM Mode\s*:\s*${CMM_Mode} -> Continue
+  ^\s*Current CMM Slot\s*:\s*${Current_CMM_Slot} -> Continue
+  ^\s*Running configuration\s*:\s*${Running_Configuration} -> Continue
+  ^\s*Certify/Restore Status\s*:\s*${Certify_Restore_Status} -> Continue
+  ^\s*Flash Between CMMs\s*:\s*${Flash_Between_CMMs} -> Continue
+  ^\s*Running Configuration\s*:\s*${Running_Configuration_Status} -> Continue
+  ^\s*Stacks Reload on Takeover\s*:\s*${Stacks_Reload} -> End

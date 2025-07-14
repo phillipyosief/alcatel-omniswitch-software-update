@@ -1,0 +1,16 @@
+- name: Read file contents
+  ansible.builtin.slurp:
+    src: "{{ backup_chassis_state_file }}"
+  register: file_contents
+
+- name: Decode file contents
+  set_fact:
+    file_content_decoded: "{{ file_contents.content | b64decode | from_yaml }}"
+
+- name: Set command output list
+  set_fact:
+    command_output_list: "{{ raw_show_virtual_chassis_topology_output.stdout_lines }}"
+
+- name: Check if command output matches file contents
+  set_fact:
+    is_chassis_different: "{{ command_output_list != file_content_decoded }}"

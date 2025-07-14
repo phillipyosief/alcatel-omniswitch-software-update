@@ -1,0 +1,15 @@
+- include_tasks: "tasks/check_release.yml"
+
+- name: Check U-Boot version
+  alcatel.aos8.aos8_command:
+    commands:
+      - show hardware-info
+  register: raw_hardwareinfo_output
+
+- name: Parse U-Boot version
+  set_fact:
+    uboot_version: "{{ (raw_hardwareinfo_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_hardware-info.textfsm')).0 }}"
+
+- name: Format U-Boot version
+  set_fact:
+    uboot_version: "{{ uboot_version['uboot_version'] }}"
