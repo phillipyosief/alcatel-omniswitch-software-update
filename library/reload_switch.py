@@ -47,11 +47,11 @@ def main():
     release = params['release']
 
     # Befehl erzeugen
-    if release == "R6":
+    if release == "6":
         command = f"reload {directory} rollback-timeout {rollback_timeout}"
-    else:  # R8
+    elif release == "8":
         command = f"reload from {directory} rollback-timeout {rollback_timeout}"
-
+    
     try:
         output, error = execute_command(host, username, password, command)
 

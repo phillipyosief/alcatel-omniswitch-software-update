@@ -5,6 +5,8 @@ omniswitch_username: "admin"
 omniswitch_password: "switch"
 
 textfsm_folder: "{{ role_path }}/textfsm/"
+versions_file: "{{ role_path }}/files/versions.json"
 
 rollback_timeout: 15
+wait_for_timeout: 300
 directory: working

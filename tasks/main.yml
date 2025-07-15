@@ -1,2 +1,134 @@
 ---
 # tasks file for alcatel-omniswitch-software-update
+- name: Getting newest version
+  block:
+    - include_tasks: "get_model_name.yml"
+    - name: Load JSON data from file
+      set_fact:
+        versions: "{{ lookup('file', versions_file) | from_json }}"
+
+    - name: Extract firmware, uboot, fpga version for specific device
+      set_fact:
+        new_firmware_version: "{{ versions[model_name].firmware }}"
+        new_fpga_version: "{{ versions[model_name].fpga }}"
+        new_uboot_version: "{{ versions[model_name].uboot }}"
+
+- name: Verify if switch is safe to update
+  include_tasks: "is_switch_safe_to_update.yml"
+
+- name: Verify if update is required
+  block:
+    - include_tasks: "get_firmware_version.yml"
+    - include_tasks: "get_fpga_version.yml"
+    - include_tasks: "get_uboot_version.yml"
+
+    - name: Verify if FPGA-Update is required
+      set_fact:
+        fpga_update_required: true
+        when: new_fpga_version != fpga_version
+
+    - name: Verify if U-Boot-Update is required
+      set_fact:
+        uboot_update_required: true
+        when: new_uboot_version != uboot_version
+
+    - name: Verify if Firmware-Update is required
+      set_fact:
+        firmware_update_required: true
+        when: new_firmware_version != firmware_version
+
+    - name: Check if any update is required
+      fail:
+        msg: "No updates required. All components are already up to date."
+      when:
+        - not (fpga_update_required | default(false))
+        - not (uboot_update_required | default(false))
+        - not (firmware_update_required | default(false))
+
+
+- name: Saving current chassis state
+  include_tasks: "save_chassis_state.yml"
+
+- name: Uploading FPGA files
+  upload_file: 
+    host: "{{ inventory_hostname }}"
+    port: 22
+    username: "{{ omniswitch_username }}"
+    password: "{{ omniswitch_password }}"
+    remote_path: "/flash"
+    files: "{{ fpga_files }}"
+  when: fpga_update_required
+
+- name: Uploading U-Boot files
+  upload_file: 
+    host: "{{ inventory_hostname }}"
+    port: 22
+    username: "{{ omniswitch_username }}"
+    password: "{{ omniswitch_password }}"
+    remote_path: "/flash"
+    files: "{{ uboot_files }}"
+  when: uboot_update_required
+
+- name: Uploading Firmware files
+  upload_file: 
+    host: "{{ inventory_hostname }}"
+    port: 22
+    username: "{{ omniswitch_username }}"
+    password: "{{ omniswitch_password }}"
+    remote_path: "/flash"
+    files: "{{ firmware_files }}"
+  when: firmware_update_required
+
+- name: Applying update
+  block:
+    - include_tasks: "{{ module_path }}/update_uboot.yml"
+      when: uboot_update_required
+    - include_tasks: "{{ module_path }}/update_fpga.yml"
+      when: fpga_update_required
+    
+    - name: Execute reload from working with rollback-timeout {{ rollback_timeout }}
+      reload_switch:
+        host: "{{ inventory_hostname }}"
+        username: "{{ omniswitch_username }}"
+        password: "{{ omniswitch_password }}"
+        rollback_timeout: "{{ rollback_timeout }}"
+        directory: "working"
+        release: "{{ release }}"
+      register: reload_output
+
+- name: Wait for switch to Become Unreachable
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    state: absent
+    timeout: "{{ wait_for_timeout }}"
+
+- name: Wait for switch to Become reachable
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    state: present
+    timeout: "{{ wait_for_timeout }}"
+
+- name: Verify chassis state
+  include_tasks: "compare_chassis_state.yml"
+
+- name: Verify switch health
+  include_tasks: "is_switch_safe_to_update.yml"
+
+- name: Finalize update
+  block:
+    - name: Cancel planned reload
+      reload_cancel:
+        host: "{{ inventory_hostname }}"
+        username: "{{ omniswitch_username }}"
+        password: "{{ omniswitch_password }}"
+      register: cancel_result
+
+    - name: Write memory flash synchro
+      include_tasks: "write_memory.yml"
+
+    - include_tasks: delete_update_junk.yml
+  when:
+    - not is_chassis_different
+    - is_switch_safe_to_update

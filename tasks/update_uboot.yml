@@ -1,4 +1,4 @@
-- include_tasks: "tasks/check_release.yml"
+- include_tasks: "check_release.yml"
 
 - name: Updating U-Boot (CMM)
   alcatel.aos8.aos8_command:

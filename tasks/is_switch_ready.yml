@@ -1,4 +1,4 @@
-- include_tasks: "tasks/check_release.yml"
+- include_tasks: "check_release.yml"
 
 - name: Wait until device is reachable via ping
   wait_for:

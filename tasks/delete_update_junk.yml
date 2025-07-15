@@ -1,13 +1,14 @@
 - include_tasks: "check_release.yml"
 
-- name: Updating FPGA (CMM)
+- name: Remove junk
   alcatel.aos8.aos8_command:
     commands:
-      - "update fpga-cpld cmm all file {{ fpga_file_name }}"
+      - "rm -rf uboot*"
+      - "rm -rf fpga*"
   when: release == '8'
   
 - name: Updating FPGA (NI)
   alcatel.aos8.aos8_command:
     commands:
-      - "update fpga ni all"
+     - "rm KFfpga.upgrade_kit"
   when: release == '6'
