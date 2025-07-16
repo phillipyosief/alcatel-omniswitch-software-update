@@ -17,7 +17,7 @@ Ansible role for automated software updates of Alcatel-Lucent OmniSwitch devices
 |----------|---------|-------------|
 | `omniswitch_username` | `"admin"` | Switch username |
 | `omniswitch_password` | `"switch"` | Switch password |
-| `textfsm_folder` | `"{{ role_path }}/textfsm/"` | TextFSM templates path |
+| `textfsm_folder` | `"textfsm/"` | TextFSM templates path |
 | `rollback_timeout` | `15` | Rollback timeout in minutes |
 | `directory` | `working` | Target directory (working/running) |
 
