@@ -5,14 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This Ansible role provides safe and automated software updates for Alcatel-Lucent OmniSwitch devices running AOS6 and AOS8. It supports firmware, FPGA, and U-Boot updates with comprehensive safety checks, rollback protection, and state validation. The role includes built-in error handling, virtual chassis support, and extensive logging capabilities to ensure reliable network infrastructure updates. Name
-> Short blurb about what your product does.
-
-
-[\[!\[Downloads Stats\]\[npm-downloads\]\]\[npm-url\]](https://img.shields.io/ansible/role/d/phillipyosief/alcatel-omniswitch-software-update)
-
-One to two paragraph statement about your product and what it does.
-
-![](header.png)
 
 ## Installation
 
