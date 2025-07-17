@@ -1,5 +1,12 @@
 - include_tasks: "check_release.yml"
 
+- name: Extract U-Boot filename from path
+  set_fact:
+    uboot_file_name: "{{ uboot_files[0] | basename }}"
+  when: 
+    - release == '8'
+    - uboot_files is defined and uboot_files | length > 0
+
 - name: Updating U-Boot (CMM)
   alcatel.aos8.aos8_command:
     commands:

@@ -1,0 +1,67 @@
+- include_tasks: "check_release.yml"
+
+- name: Collect show running-directory output
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show running-directory"
+  register: raw_show_running_directory_output
+
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm"
+
+- name: Parse show running-directory output
+  set_fact:
+    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path) }}"
+
+- name: Debug - Show raw running-directory output
+  debug:
+    msg: |
+      Raw running-directory output:
+      {{ raw_show_running_directory_output.stdout[0] }}
+
+- name: Debug - Show parsed running-directory output
+  debug:
+    msg: |
+      Parsed running-directory output:
+      {{ parsed_show_running_directory_output }}
+
+- name: Debug - Show individual parsed values
+  debug:
+    msg: |
+      Individual values from parsed output:
+      - running_directory: "{{ parsed_show_running_directory_output[0].running_directory | default('NOT_FOUND') }}"
+      - running_configuration_status: "{{ parsed_show_running_directory_output[0].running_configuration_status | default('NOT_FOUND') }}"
+      - flash_between_cmms: "{{ parsed_show_running_directory_output[0].flash_between_cmms | default('NOT_FOUND') }}"
+
+- name: Check Running Directory status (basic checks)
+  set_fact:
+    basic_directory_checks: "{{ 
+      (parsed_show_running_directory_output[0].running_directory == 'WORKING') and
+      (parsed_show_running_directory_output[0].running_configuration_status == 'SYNCHRONIZED')
+      }}"
+
+- name: Check flash_between_cmms status (only for virtual chassis)
+  set_fact:
+    flash_sync_check: "{{ 'SYNCHRONIZED' in parsed_show_running_directory_output[0].flash_between_cmms }}"
+  when: is_virtual_chassis | default(false)
+
+- name: Set flash_sync_check to true for non-virtual chassis
+  set_fact:
+    flash_sync_check: true
+  when: not (is_virtual_chassis | default(false))
+
+- name: Set final running directory safety status
+  set_fact:
+    is_running_directory_safe: "{{ basic_directory_checks and flash_sync_check }}"
+
+- name: Debug - Show running directory check result
+  debug:
+    msg: |
+      Running Directory Check Results:
+      - is_virtual_chassis: {{ is_virtual_chassis | default('NOT_SET') }}
+      - is_running_directory_safe: {{ is_running_directory_safe }}
+      - Condition 1 (running_directory == 'WORKING'): {{ parsed_show_running_directory_output[0].running_directory == 'WORKING' }}
+      - Condition 2 (running_configuration_status == 'SYNCHRONIZED'): {{ parsed_show_running_directory_output[0].running_configuration_status == 'SYNCHRONIZED' }}
+      - Condition 3 (flash_between_cmms check): {{ flash_sync_check }} (only relevant for virtual chassis: {{ is_virtual_chassis | default(false) }})
+      - flash_between_cmms value: "{{ parsed_show_running_directory_output[0].flash_between_cmms | default('NOT_FOUND') }}"

@@ -1,5 +1,12 @@
 - include_tasks: "check_release.yml"
 
+- name: Extract FPGA filename from path
+  set_fact:
+    fpga_file_name: "{{ fpga_files[0] | basename }}"
+  when: 
+    - release == '8'
+    - fpga_files is defined and fpga_files | length > 0
+
 - name: Updating FPGA (CMM)
   alcatel.aos8.aos8_command:
     commands:

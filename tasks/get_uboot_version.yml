@@ -6,9 +6,13 @@
       - show hardware-info
   register: raw_hardwareinfo_output
 
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_hardware-info.textfsm"
+
 - name: Parse U-Boot version
   set_fact:
-    uboot_version: "{{ (raw_hardwareinfo_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_hardware-info.textfsm')).0 }}"
+    uboot_version: "{{ (raw_hardwareinfo_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path)).0 }}"
 
 - name: Format U-Boot version
   set_fact:

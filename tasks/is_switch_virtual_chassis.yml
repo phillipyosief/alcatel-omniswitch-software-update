@@ -1,0 +1,36 @@
+- include_tasks: "check_release.yml"
+
+- name: Check chassis configuration
+  alcatel.aos8.aos8_command:
+    commands:
+      - show chassis
+  register: raw_chassis_output
+
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_chassis.textfsm"
+
+- name: Parse chassis output using TextFSM
+  set_fact:
+    parsed_chassis_output: "{{ raw_chassis_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path) }}"
+
+- name: Check if switch is virtual chassis (by parsing TextFSM output for multiple chassis entries)
+  set_fact:
+    is_virtual_chassis: "{{ parsed_chassis_output | length > 1 }}"
+
+- name: Check if switch is virtual chassis (alternative method - search for 'Slave' keyword in raw output)
+  set_fact:
+    is_virtual_chassis_alt: "{{ 'Slave' in raw_chassis_output.stdout[0] }}"
+
+- name: Set final virtual chassis status (using primary method)
+  set_fact:
+    is_virtual_chassis: "{{ is_virtual_chassis or is_virtual_chassis_alt }}"
+
+- name: Debug virtual chassis status
+  debug:
+    msg: |
+      Virtual Chassis Detection Results:
+      - Method 1 (multiple chassis entries): {{ parsed_chassis_output | length > 1 }}
+      - Method 2 (Slave keyword present): {{ 'Slave' in raw_chassis_output.stdout[0] }}
+      - Final result: {{ is_virtual_chassis }}
+      - Total chassis entries found: {{ parsed_chassis_output | length }}

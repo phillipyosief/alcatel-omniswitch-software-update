@@ -7,7 +7,7 @@
       - "rm -rf fpga*"
   when: release == '8'
   
-- name: Updating FPGA (NI)
+- name: Remove junk
   alcatel.aos8.aos8_command:
     commands:
      - "rm KFfpga.upgrade_kit"

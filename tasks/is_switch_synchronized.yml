@@ -6,9 +6,13 @@
       - "show running-directory"
   register: raw_show_running_directory_output
 
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm"
+
 - name: Parse show running-directory output
   set_fact:
-    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm') }}"
+    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path) }}"
 
 - name: Check Running Configuration status and set is_synchronized variable
   set_fact:

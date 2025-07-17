@@ -19,3 +19,7 @@
     content: "{{ raw_show_virtual_chassis_topology_output.stdout_lines | to_nice_yaml }}"
     dest: "{{ backup_chassis_state_folder }}/{{ inventory_hostname }}"
   delegate_to: localhost
+
+- name: Set backup chassis state file path
+  set_fact:
+    backup_chassis_state_file: "{{ backup_chassis_state_folder }}/{{ inventory_hostname }}"

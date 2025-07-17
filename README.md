@@ -20,6 +20,9 @@ Ansible role for automated software updates of Alcatel-Lucent OmniSwitch devices
 | `textfsm_folder` | `"textfsm/"` | TextFSM templates path |
 | `rollback_timeout` | `15` | Rollback timeout in minutes |
 | `directory` | `working` | Target directory (working/running) |
+| `no_firmware_update` | `false` | Skip firmware update if true |
+| `no_fpga_update` | `false` | Skip FPGA update if true |
+| `no_uboot_update` | `false` | Skip U-Boot update if true |
 
 ### Required Variables
 

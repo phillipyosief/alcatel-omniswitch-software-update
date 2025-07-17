@@ -1,27 +1,24 @@
-- include_tasks: "check_release.yml"
+- include_tasks: "tasks/is_switch_virtual_chassis.yml"
+- include_tasks: "tasks/check_running_directory_status.yml"
 
-- name: Collect show running-directory output
-  alcatel.aos8.aos8_command:
-    commands:
-      - "show running-directory"
-  register: raw_show_running_directory_output
+- name: Check virtual chassis status (only if switch is virtual chassis)
+  include_tasks: "tasks/check_virtual_chassis_status.yml"
+  when: is_virtual_chassis | default(false)
 
-- name: Parse show running-directory output
+- name: Set virtual chassis safe status for non-virtual chassis switches
   set_fact:
-    parsed_show_running_directory_output: "{{ raw_show_running_directory_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_running-directory.textfsm') }}"
+    is_virtual_chassis_safe: true
+  when: not (is_virtual_chassis | default(false))
 
-- name: Collect show virtual-chassis topology
-  alcatel.aos8.aos8_command:
-    commands:
-      - "show virtual-chassis topology"
-  register: raw_show_virtual_chassis_topology_output
+- name: Debug - Show final check results
+  debug:
+    msg: |
+      Final Safety Check Results:
+      - is_virtual_chassis: {{ is_virtual_chassis | default('NOT_SET') }}
+      - is_running_directory_safe: {{ is_running_directory_safe | default('NOT_SET') }}
+      - is_virtual_chassis_safe: {{ is_virtual_chassis_safe | default('NOT_SET') }}
+      - Combined result: {{ (is_running_directory_safe | default(false)) and (is_virtual_chassis_safe | default(false)) }}
 
-- name: Check Running Configuration status and set is_switch_safe_to_update variable
+- name: Set overall switch safety status for update
   set_fact:
-    is_switch_safe_to_update: "{{ 
-      (parsed_show_running_directory_output[0].running_directory == 'WORKING') and
-      (parsed_show_running_directory_output[0].running_configuration_status == 'SYNCHRONIZED') and
-      ('SYNCHRONIZED' in parsed_show_running_directory_output[0].flash_between_cmms) and
-      ('Not-Joined' not in raw_show_virtual_chassis_topology_output.stdout[0]) and
-      ('Unassigned' not in raw_show_virtual_chassis_topology_output.stdout[0]) 
-      }}"
+    is_switch_safe_to_update: "{{ is_running_directory_safe and is_virtual_chassis_safe }}"

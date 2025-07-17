@@ -1,0 +1,34 @@
+- name: Collect show virtual-chassis topology
+  alcatel.aos8.aos8_command:
+    commands:
+      - "show virtual-chassis topology"
+  register: raw_show_virtual_chassis_topology_output
+
+- name: Debug - Show raw virtual-chassis topology output
+  debug:
+    msg: |
+      Raw virtual-chassis topology output:
+      {{ raw_show_virtual_chassis_topology_output.stdout[0] }}
+
+- name: Debug - Check for specific strings in virtual-chassis output
+  debug:
+    msg: |
+      Virtual Chassis String Analysis:
+      - Contains 'Not-Joined': {{ 'Not-Joined' in raw_show_virtual_chassis_topology_output.stdout[0] }}
+      - Contains 'Unassigned': {{ 'Unassigned' in raw_show_virtual_chassis_topology_output.stdout[0] }}
+      - Output length: {{ raw_show_virtual_chassis_topology_output.stdout[0] | length }}
+
+- name: Check Virtual Chassis topology status
+  set_fact:
+    is_virtual_chassis_safe: "{{ 
+      ('Not-Joined' not in raw_show_virtual_chassis_topology_output.stdout[0]) and
+      ('Unassigned' not in raw_show_virtual_chassis_topology_output.stdout[0]) 
+      }}"
+
+- name: Debug - Show virtual chassis check result
+  debug:
+    msg: |
+      Virtual Chassis Check Results:
+      - is_virtual_chassis_safe: {{ is_virtual_chassis_safe }}
+      - Condition 1 ('Not-Joined' not in output): {{ 'Not-Joined' not in raw_show_virtual_chassis_topology_output.stdout[0] }}
+      - Condition 2 ('Unassigned' not in output): {{ 'Unassigned' not in raw_show_virtual_chassis_topology_output.stdout[0] }}

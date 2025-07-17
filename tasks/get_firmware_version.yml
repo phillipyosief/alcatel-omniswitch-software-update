@@ -6,9 +6,13 @@
       - "show microcode"
   register: raw_microcode_output
 
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_microcode.textfsm"
+
 - name: Parsing raw microcode output
   set_fact: 
-    microcode: "{{ raw_microcode_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_microcode.textfsm') }}"
+    microcode: "{{ raw_microcode_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path) }}"
 
 - name: Check if all releases are the same
   set_fact:

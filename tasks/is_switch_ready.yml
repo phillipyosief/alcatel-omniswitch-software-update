@@ -14,9 +14,13 @@
       - "show module status"
   register: raw_show_module_status_output
 
+- name: Build TextFSM template path
+  set_fact:
+    template_path: "{{ textfsm_folder }}/ale_aos{{ release }}_show_module_status.textfsm"
+
 - name: Parse show module status output
   set_fact:
-    parsed_show_module_status_output: "{{ raw_show_module_status_output.stdout[0] | ansible.netcommon.parse_cli_textfsm('{{ textfsm_folder }}/ale_aos{{ release }}_show_module_status.textfsm') }}"
+    parsed_show_module_status_output: "{{ raw_show_module_status_output.stdout[0] | ansible.netcommon.parse_cli_textfsm(template_path) }}"
 
 - name: Verify if all Chassis/Slots are UP
   set_fact:
