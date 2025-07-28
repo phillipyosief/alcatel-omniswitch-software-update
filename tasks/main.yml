@@ -1,20 +1,5 @@
 ---
 # tasks file for alcatel-omniswitch-software-update
-- name: Getting newest version
-  block:
-    - include_tasks: "get_model_name.yml"
-    
-    - name: Load JSON data from file
-      set_fact:
-        versions: "{{ lookup('file', versions_file) | from_json }}"
-
-    - name: Extract firmware, uboot, fpga version for specific device
-      set_fact:
-        new_firmware_version: "{{ versions[model_name].firmware }}"
-        new_fpga_version: "{{ versions[model_name].fpga }}"
-        new_uboot_version: "{{ versions[model_name].uboot }}"
-  
-
 - name: Verify if switch is safe to update
   include_tasks: "is_switch_safe_to_update.yml"
 
@@ -34,36 +19,6 @@
       Please resolve these issues before attempting the update.
   when: not is_switch_safe_to_update
 
-- name: Verify if update is required
-  block:    
-    - include_tasks: "get_firmware_version.yml"
-    - include_tasks: "get_fpga_version.yml"
-    - include_tasks: "get_uboot_version.yml"
-
-    - name: Verify if FPGA-Update is required
-      set_fact:
-        fpga_update_required: true
-        when: new_fpga_version != fpga_version
-
-    - name: Verify if U-Boot-Update is required
-      set_fact:
-        uboot_update_required: true
-        when: new_uboot_version != uboot_version
-
-    - name: Verify if Firmware-Update is required
-      set_fact:
-        firmware_update_required: true
-        when: new_firmware_version != firmware_version
-
-    - name: Check if any update is required
-      fail:
-        msg: "No updates required. All components are already up to date."
-      when:
-        - not (fpga_update_required | default(false))
-        - not (uboot_update_required | default(false))
-        - not (firmware_update_required | default(false))
-
-
 - name: Saving current chassis state
   include_tasks: "save_chassis_state.yml"
 
@@ -77,7 +32,7 @@
     password: "{{ omniswitch_password }}"
     remote_path: "/flash"
     files: "{{ fpga_files }}"
-  when: fpga_update_required
+  when: fpga_files is defined and fpga_files | length > 0
 
 - name: Uploading U-Boot files
   upload_file: 
@@ -87,7 +42,7 @@
     password: "{{ omniswitch_password }}"
     remote_path: "/flash"
     files: "{{ uboot_files }}"
-  when: uboot_update_required
+  when: uboot_files is defined and uboot_files | length > 0
 
 - name: Uploading Firmware files
   upload_file: 
@@ -97,14 +52,12 @@
     password: "{{ omniswitch_password }}"
     remote_path: "/flash/working"
     files: "{{ firmware_files }}"
-  when: firmware_update_required
+  when: firmware_files is defined and firmware_files | length > 0
 
 - name: Applying update
   block:
     - include_tasks: "tasks/update_uboot.yml"
-      when: uboot_update_required
     - include_tasks: "tasks/update_fpga.yml"
-      when: fpga_update_required
     
     
     - name: Execute reload from working with rollback-timeout {{ rollback_timeout }}
